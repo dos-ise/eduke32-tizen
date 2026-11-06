@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:tizen="http://tizen.org/ns/widgets"
+        id="http://dos-ise.github.io/eduke32-tizen"
+        version="0.1.0"
+        viewmodes="fullscreen">
+  <tizen:application id="eduke32tv1.eduke32"
+                     package="eduke32tv1"
+                     required_version="6.1"
+                     launch_mode="caller"/>
+  <content src="index.html"/>
+  <name>EDuke32</name>
+  <icon src="icon.png"/>
+  <access origin="*"/>
+  <feature name="http://tizen.org/feature/screen.size.all"/>
+  <tizen:profile name="tv-samsung"/>
+  <tizen:privilege name="http://tizen.org/privilege/internet"/>
+  <tizen:setting screen-orientation="landscape"
+                 context-menu="disable"
+                 background-support="disable"
+                 encryption="disable"
+                 install-location="auto"
+                 hwkey-event="enable"/>
+</widget>

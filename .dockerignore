@@ -1,0 +1,17 @@
+.git
+.github
+.vscode
+**/node_modules
+obj/
+obj-*/
+eduke32
+eduke32.js
+eduke32.wasm
+eduke32.data
+eduke32.data.js
+platform/emscripten/eduke32.js
+platform/emscripten/eduke32.wasm
+platform/emscripten/eduke32.data
+platform/emscripten/eduke32.data.js
+platform/emscripten/eduke32-net.js.map
+*.log
