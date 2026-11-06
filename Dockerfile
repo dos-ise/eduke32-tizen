@@ -4,6 +4,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
 ARG TIZEN_STUDIO_VERSION=6.1
 ARG EMSDK_VERSION=6.0.5
+ARG APP_VERSION=0.1.0
 
 ENV TZ=${TZ}
 
@@ -77,7 +78,12 @@ RUN mkdir -p /home/builder/widget \
         /home/builder/widget/ \
     && cp platform/tizen/icon.png /home/builder/widget/icon.png \
     && sed -i 's/__BUILD_ID__/tizen/g' /home/builder/widget/index.html \
-    && cp platform/tizen/config.xml /home/builder/widget/config.xml
+    && cp platform/tizen/config.xml /home/builder/widget/config.xml \
+    && sed -i 's/\r$//' /home/builder/widget/config.xml \
+    && printf '%s\n' "${APP_VERSION}" | grep -Eq '^[0-9]+(\.[0-9]+){1,2}$' \
+    && sed -i -E "s/^( +version=\")[^\"]*(\")$/\1${APP_VERSION}\2/" \
+        /home/builder/widget/config.xml \
+    && grep -Fq "version=\"${APP_VERSION}\"" /home/builder/widget/config.xml
 
 RUN echo \
     'set timeout -1\n' \

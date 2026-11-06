@@ -1,0 +1,79 @@
+name: Release Tizen WGT
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (for example 1.2.3); leave empty for a development pre-release"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Determine release version
+        id: release
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$REQUESTED_VERSION" ]]; then
+            if [[ ! "$REQUESTED_VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; then
+              echo "::error::Version must be numeric, for example 1.2 or 1.2.3."
+              exit 1
+            fi
+            app_version="$REQUESTED_VERSION"
+            tag="v${app_version}"
+            prerelease=false
+          else
+            app_version="0.0.${GITHUB_RUN_NUMBER}"
+            timestamp="$(date -u +%Y%m%d.%H%M)"
+            tag="v${app_version}-dev.${timestamp}.${GITHUB_RUN_NUMBER}"
+            prerelease=true
+          fi
+          echo "app_version=${app_version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${prerelease}" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed Tizen WGT
+        env:
+          APP_VERSION: ${{ steps.release.outputs.app_version }}
+        run: |
+          docker buildx build \
+            --build-arg "APP_VERSION=${APP_VERSION}" \
+            --output type=local,dest=dist .
+          unzip -p dist/EDuke32.wgt config.xml | grep -Fq "version=\"${APP_VERSION}\""
+          cp dist/EDuke32.wgt "EDuke32-${APP_VERSION}.wgt"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APP_VERSION: ${{ steps.release.outputs.app_version }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          IS_PRERELEASE: ${{ steps.release.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          cat > release-notes.md <<EOF
+          EDuke32 for Samsung Tizen TV, version ${APP_VERSION}.
+
+          The WGT package is signed with the repository's development certificate.
+          A Samsung TV signing profile may be required to install it on a TV.
+          EOF
+          args=()
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            args+=(--prerelease)
+            printf '\nThis is a development pre-release.\n' >> release-notes.md
+          fi
+          gh release create "$RELEASE_TAG" "EDuke32-${APP_VERSION}.wgt" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$RELEASE_TAG" \
+            --notes-file release-notes.md \
+            "${args[@]}"

@@ -1,141 +1,92 @@
-# EDuke32-WASM
+# EDuke32-Tizen
 
-Duke Nukem 3D on WebAssembly, with serverless peer-to-peer multiplayer.
+Play Duke Nukem 3D on a Samsung Smart TV running Tizen. EDuke32 is compiled to
+WebAssembly and packaged as a Tizen widget (`.wgt`); the freely distributable
+Duke Nukem 3D shareware episode is included.
 
-[![Duke Nukem 3D title screen](platform/emscripten/og-image.png)](https://digitalcybersoft.github.io/eduke32-wasm/)
+The project is based on **[EDuke32](https://www.eduke32.com/)**, the open-source
+Duke Nukem 3D port. This repository adapts it for Tizen TVs and also maintains
+the WebAssembly browser build and serverless multiplayer.
 
-### [▶ PLAY NOW — digitalcybersoft.github.io/eduke32-wasm](https://digitalcybersoft.github.io/eduke32-wasm/)
+## Installation
 
-No install, no account — the shareware episode is bundled and multiplayer
-works straight from the page.
+The Tizen app requires **Tizen 6.1 or later**. The simplest way to install it
+is with [Apps2Samsung](https://github.com/Apps2Samsung/Apps2Samsung), which
+handles TV discovery, app signing, and installation.
 
-This is a downstream fork. The game engine is **[EDuke32](https://www.eduke32.com/)**,
-the long-running open-source Duke Nukem 3D port — all engine, renderer, and
-gameplay credit belongs to the EDuke32 team and the lineage it builds on:
-Ken Silverman's BUILD engine, Jonathon Fowler's JFDuke3D, 3D Realms' original
-Duke Nukem 3D, and StrikerTheHedgefox's NetDuke32, whose lockstep multiplayer
-revival is the foundation this fork's netcode grew from. This repository
-changes none of what makes the game the game; it adds the two things below.
+### 1. Enable Developer Mode on the TV
 
-## 1. It runs in your browser
+1. Open **Apps** from the TV's Home or Smart Hub screen.
+2. Enter `12345` with the remote's number buttons. If the remote has no number
+   buttons, use its **123** button and enter the digits on screen.
+3. Turn **Developer Mode** on and enter the computer's local IP address as the
+   host PC. The computer and TV must be on the same network.
+4. Restart the TV.
 
-The full EDuke32 engine compiled to WebAssembly with Emscripten — no install,
-no plugins, playable immediately with the bundled shareware episode:
+### 2. Install EDuke32
 
-- Classic Build renderer, sound, and music in a canvas; the engine's blocking
-  main loop runs under ASYNCIFY so menus, loads, and network waits never
-  freeze the tab.
-- Saves, settings, and game data persist locally (IndexedDB / localStorage).
-  Import your own retail `DUKE3D.GRP` once through the settings panel and the
-  full game lives in your browser.
-- A web shell tuned for actually playing an FPS in a tab: one-click
-  fullscreen with the Keyboard Lock API (holding Ctrl to crouch and tapping W
-  no longer closes the tab), a leave-confirmation that only arms during live
-  play, display modes, a mute toggle, and crash forensics that survive a dead
-  tab to make bug reports useful.
+1. Download the latest `EDuke32-<version>.wgt` from the
+   [GitHub Releases](https://github.com/dos-ise/eduke32-tizen/releases/latest)
+   page.
+2. Install and open the latest
+   [Apps2Samsung release](https://github.com/Apps2Samsung/Apps2Samsung/releases/latest)
+   on your computer.
+3. Select your TV and install the downloaded WGT as a local/custom app.
+   Apps2Samsung signs the package for the selected TV and sends it to the TV.
+4. Launch **EDuke32** from the TV's Apps screen.
 
-## 2. Multiplayer, rebuilt for the open web
+On Tizen 7 or later, Samsung may require signing in to a Samsung developer
+account to create the TV's installation certificate. See the
+[Apps2Samsung Developer Mode guide](https://github.com/Apps2Samsung/Apps2Samsung/wiki/FAQ#-how-to-enable-developer-mode-on-your-tv)
+if the TV cannot be found or the install fails. If the TV does not connect
+after a restart, fully power it off and unplug it briefly before trying again.
 
-NetDuke32 proved classic lockstep netplay could live again; this fork extends
-that work into a serverless, browser-native model:
-
-- **No servers.** Players connect directly over WebRTC data channels. Public
-  Nostr relays carry only signaling and match discovery — there is no game
-  server, no accounts, nothing to host or pay for.
-- **Host-authoritative streaming.** Instead of pure lockstep, the host
-  continuously streams authoritative world state (enemy health and deaths,
-  doors, walls, pickups, positions) while guests run a responsive free-run
-  local simulation with client-side prediction. Guest input lag no longer
-  scales with ping, and world truth is always the host's: enemy kills are
-  host-owned, so desync artifacts like "the corpse that keeps shooting"
-  self-heal instead of accumulating.
-- **Cross-play.** A native Linux build speaks the identical transport and
-  wire protocol, so browser players and native players share matches freely —
-  either side can host.
-- **Mid-game joins.** Join a running deathmatch or co-op: the host streams a
-  state snapshot, a reliable catch-up handshake paces you to the live edge,
-  and you're seated deterministically on every peer's timeline. Snapshots are
-  serialized portably, so a 64-bit native host and a 32-bit browser guest
-  exchange them byte-for-byte.
-- **Explicit level-transition gating.** The host alone signals "load the next
-  level" and "enter now"; everyone else holds at a lobby-style wait screen
-  with a per-player Ready/Loading roster. Nobody enters a level while someone
-  is still loading textures.
-- **Resilient connections.** Offer/answer generation tracking, dead-peer
-  reaping, disconnect grace windows (45 s in-game, 120 s across level loads),
-  and in-order GRP transfer with resume — matches survive the hiccups real
-  links have.
-- **Game data handled honestly.** GRPs are fingerprinted (CRC-32 + SHA-256)
-  and matched between peers; the freely distributable shareware episode can
-  be transferred player-to-player so a friend can join in one click, while
-  retail data is never redistributed.
-- **Lobbies.** Host public matches (discoverable in the in-page browser) or
-  private ones via invite codes and `?join=` links.
+The WGT is also available for manual installation with Tizen Studio. Manual
+installation requires a signing profile and certificate accepted by the TV;
+the development certificate used by the build is not a Samsung distribution
+certificate.
 
 ## Game data
 
-No retail assets are included. The **shareware 1.3d episode** is freely
-distributable (`assets/shareware/LICENSE.TXT`) and every build ships playable
-out of the box:
+The WGT includes the freely distributable **Duke Nukem 3D shareware 1.3d
+episode**, so it can be played after installation. Retail game data is not
+included. If you own the full game, import your `DUKE3D.GRP` through the game's
+settings panel on a supported build.
 
-- **Web**: shareware is baked into the engine bundle.
-- **Native releases** (Linux/macOS/Windows): the shareware `DUKE3D.GRP` is
-  packaged beside the binary.
-- **Bare/self-built native binaries**: on first launch with no game data
-  found, the engine downloads the shareware GRP (11 MB) next to itself and
-  boots it — the download is checksum-pinned against the engine's known
-  shareware fingerprint, so a bad or tampered file is discarded.
+## Building the WGT
 
-For the full game, use the `DUKE3D.GRP` from a copy you own (GOG, Steam,
-original CD): drop it beside the binary (native) or import it once through
-the settings panel (web — it stays in browser storage, local to you). Retail
-data always wins the group selection over shareware.
+Requirements: Docker with BuildKit/Buildx enabled.
 
-## Building
-
-Native Linux (cross-play host/guest):
+From the repository root, build and export `dist/EDuke32.wgt`:
 
 ```sh
-make NETNATIVE=1 NETDUKE32=1 USE_LIBVPX=0 RENDERTYPE=SDL SDL_TARGET=2 obj=obj-native -j8
+docker buildx build --output type=local,dest=dist .
 ```
 
-WebAssembly engine:
+Set the Tizen widget version explicitly when building:
 
 ```sh
-source /path/to/emsdk/emsdk_env.sh
-make PLATFORM=EMSCRIPTEN EM_SINGLE_FILE=0 NETDUKE32=1 obj=obj-em -j8
+docker buildx build --build-arg APP_VERSION=1.2.3 --output type=local,dest=dist .
 ```
 
-Web networking bundle, then serve `platform/emscripten/index.html` with the
-engine artifacts from any static HTTPS server:
+The Docker build compiles the Emscripten game and multiplayer bundle, prepares
+the Tizen web app, and signs the WGT with a local development certificate.
 
-```sh
-cd platform/emscripten && npm install && npm run build:net
-```
+## GitHub Releases
 
-## Headless / testing knobs (native)
+To publish a release, run **Actions → Release Tizen WGT → Run workflow** on the
+desired branch. Enter a numeric version such as `1.2.3` for a regular release.
+Leave the version empty to create a timestamped development pre-release. The
+workflow writes the version into the Tizen widget manifest and attaches the
+resulting WGT to the GitHub release.
 
-| Variable | Meaning |
-| --- | --- |
-| `NN_ROLE` | `host` or `guest` (auto-start without the menu) |
-| `NN_KEY` | shared match key |
-| `NN_HOSTID` | host identity for a guest to join |
-| `NN_PLAYERS` | seats to wait for before launching (default 2) |
-| `NN_MAXPLAYERS` | seat cap, decoupled from the launch threshold; honored up to 16 (the native transport defaults to 8). Caveat: host uplink scales O(N) -- 16 seats is ~4x the 8-player uplink; browser hosts on residential links should stay near 8 |
-| `NN_PUBLIC` | `1` = announce in the public match list |
-| `NN_NAME` | match / player name |
-| `NN_GAMETYPE` | gametype index: `0` deathmatch (default), `1` co-op, `2` DM no-spawn, `3`/`4` team DM, `5` last man standing, `6` co-op no-respawn |
-| `NN_LOCALBOT` | `1` = this seat plays itself (test bot) |
-| `NN_BOTLTG` | bot roaming brain (OpenArena-mined two-tier goals: map-wide committed goal + last-seen chase + per-edge avoid-reach). Default ON; `0` = kill-switch back to the old single-room brain (also the baseline leg of the roaming smoke) |
-| `NN_AUTOAIM` | host: `1` = allow autoaim; default forces it OFF for every player |
-| `NN_FORENSICS` | `1` = verbose net forensics logging (`[psnd]`, dumps, probes) |
-| `NN_PREDICT` | prediction feature mask; default all ON, `0` = kill-switch. bit0 correction replay, bit1 predicted view, bit2 reserved (P3 weapon visuals), bit3 instant local action sounds, bit4 idle correction deadband (standstill-flash fix) |
+## WebAssembly and multiplayer
 
-## More documentation
-
-- `platform/emscripten/README-netplay.md` — the browser transport in depth
-  (WebRTC channels, Nostr signaling, GRP gating/transfer, the JS↔C seam).
-- `platform/emscripten/docs/` — integration notes and menu specs.
+EDuke32 runs in the browser through Emscripten as well as on Tizen. Its
+NetDuke32 multiplayer connects peers directly over WebRTC; public Nostr relays
+are used only for signaling and match discovery. Browser and native builds can
+play together. For details about the browser transport, see
+`platform/emscripten/README-netplay.md`.
 
 ## Credit where it's due
 
