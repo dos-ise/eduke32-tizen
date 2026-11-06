@@ -12,7 +12,14 @@ docker buildx build --output type=local,dest=dist .
 
 The result is `dist/EDuke32.wgt`. To target another Emscripten SDK release or
 Tizen Studio installer version, pass `--build-arg EMSDK_VERSION=...` or
-`--build-arg TIZEN_STUDIO_VERSION=...`.
+`--build-arg TIZEN_STUDIO_VERSION=...`. Set the widget's version with
+`--build-arg APP_VERSION=1.2.3`; it is written to the `version` attribute in
+`config.xml` inside the WGT.
+
+To publish a GitHub Release, run **Actions → Release Tizen WGT → Run workflow**.
+Enter a numeric version such as `1.2.3` for a regular release, or leave it empty
+to create a timestamped development pre-release. The workflow builds a WGT with
+that version in its Tizen manifest and attaches it to the release.
 
 The generated package uses a local development signing certificate with the
 password `1234`, matching the signing flow in the Doom Tizen reference
