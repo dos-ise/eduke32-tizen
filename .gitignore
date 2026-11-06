@@ -3,6 +3,7 @@ obj/
 obj-wasm/
 obj-em/
 obj-native/
+/dist/
 
 /eduke32
 /mapster32
